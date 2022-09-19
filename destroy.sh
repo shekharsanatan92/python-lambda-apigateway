@@ -16,14 +16,17 @@ NOC='\033[0m'
 echo -e  "$COL> Destroying CloudFormation stacks...$NOC"
 
 # Run below to delete stacks
-aws --profile org cloudformation delete-stack --stack-name $STACK_NAME_DYNAMO --region $REGION
-aws --profile org cloudformation wait stack-delete-complete --stack-name $STACK_NAME_DYNAMO --region $REGION
+aws cloudformation delete-stack --stack-name $STACK_NAME_GATEWAY --region $REGION
+aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME_GATEWAY --region $REGION
 
-aws --profile org cloudformation delete-stack --stack-name $STACK_NAME_S3 --region $REGION
-aws --profile org cloudformation wait stack-delete-complete --stack-name $STACK_NAME_S3 --region $REGION
+aws cloudformation delete-stack --stack-name $STACK_NAME_LAMBDA_REST_API --region $REGION
+aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME_LAMBDA_REST_API --region $REGION
 
-aws --profile org cloudformation delete-stack --stack-name $STACK_NAME_LAMBDA_REST_API --region $REGION
-aws --profile org cloudformation wait stack-delete-complete --stack-name $STACK_NAME_LAMBDA_REST_API --region $REGION
+aws cloudformation delete-stack --stack-name $STACK_NAME_DYNAMO --region $REGION
+aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME_DYNAMO --region $REGION
 
-aws --profile org cloudformation delete-stack --stack-name $STACK_NAME_GATEWAY --region $REGION
-aws --profile org cloudformation wait stack-delete-complete --stack-name $STACK_NAME_GATEWAY --region $REGION
+aws cloudformation delete-stack --stack-name $STACK_NAME_S3 --region $REGION
+aws cloudformation wait stack-delete-complete --stack-name $STACK_NAME_S3 --region $REGION
+
+
+
