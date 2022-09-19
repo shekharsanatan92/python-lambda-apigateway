@@ -12,7 +12,7 @@
 
 <h3 align="left">Architecture Diagram</h3>
 
-![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/ReadmeImages/python-lambda-ApiGateway.jpg?raw=true)
+![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/ReadmeImages/python-lambda-apigateway.jpg?raw=true)
 
 <h3 align="left">Implementation Details</h3>
 
