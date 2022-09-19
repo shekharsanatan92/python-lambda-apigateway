@@ -11,8 +11,8 @@
 </p>
 
 <h3 align="left">Architecture Diagram</h3>
-<p align="left"> ![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/python-lambda-ApiGateway.jpg?raw=true)
-</p>
+
+![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/python-lambda-ApiGateway.jpg?raw=true)
 
 <h3 align="left">Implementation Details</h3>
 Repository contains 4 cloudformation templates, each of which gets deployed as individual cloudformation stacks via **deploy.sh** script. Resources within these stacks refer to each other via CFN Export/Import capabilities. 
@@ -37,12 +37,14 @@ You can use tools like Postman to send Get/Post requests to the API endpoint. **
   "name": "road",
   "url": "https://cdn.pixabay.com/photo/2015/12/01/20/28/road-1072823__480.jpg"
 } </p>
-<p align="left">![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/PostRequest.jpg?raw=true)</p>
+
+![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/PostRequest.png?raw=true)
 
 
 <h4 align="left">Get Request Template</h4> 
 <p align="left"> It doesn't require any input paramters </p>
 <p align="left"> Example:</p>
-<p align="left">![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/GetRequest.jpg?raw=true)</p>
+
+![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/GetRequest.png?raw=true)
 
 <h4 align="left">You can run destroy.sh to clear off the stacks post activity.</h4>
