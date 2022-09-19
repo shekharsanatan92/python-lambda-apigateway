@@ -15,7 +15,9 @@
 ![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/ReadmeImages/python-lambda-ApiGateway.jpg?raw=true)
 
 <h3 align="left">Implementation Details</h3>
+
 Repository contains 4 cloudformation templates, each of which gets deployed as individual cloudformation stacks via **deploy.sh** script. Resources within these stacks refer to each other via CFN Export/Import capabilities. 
+
 <h3 align="left">Running deploy.sh creates:</h3> 
 <p align="left"> 1 DynamoDb table -> 'Images' - For storing Image information </p>
 <p align="left"> 1 S3 bucket -> 'route-api-imagestore' - For storing images </p>
