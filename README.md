@@ -19,14 +19,20 @@ Repository contains 4 cloudformation templates, each of which gets deployed as i
 <h3 align="left">Running deploy.sh creates:</h3> 
 <p align="left"> 1 DynamoDb table -> 'Images' - For storing Image information </p>
 <p align="left"> 1 S3 bucket -> 'route-api-imagestore' - For storing images </p>
+
 2 Lambdas -> 's3ImageDetails & s3ImageUpload' - **s3ImageDetails** retrieves all uploaded image details from dynamodb while **s3ImageUpload** performs the upload and update of image information to s3 and dynamodb respectively
+
 <p align="left"> 1 API Gateway - To route traffic to respective lambdas based on the type of API call(Get/Post)</p>
 
 <h3 align="left">API in Detail:</h3> 
+
 Once the stacks are created, you can retrieve the API endpoint of the deployed API Gateway either via AWS Console or refer to **RootUrl** in the **Outputs** section of the **lambdaRestApi** cloudformation stack 
+
 <h4 align="left">Calling Rest API</h4> 
+
 You can use tools like Postman to send Get/Post requests to the API endpoint. **It accepts only JSON input**
-<h4 align="left">Post Request Template</h4> 
+
+<h4 align="left">~~Post Request Template~~</h4> 
 <p align="left"> It takes two paramters in the form of json input</p>
 <p align="left"> {
   "name": NAME OF THE IMAGE,
@@ -41,7 +47,7 @@ You can use tools like Postman to send Get/Post requests to the API endpoint. **
 ![alt text](https://github.com/shekharsanatan92/python-lambda-apigateway/blob/master/ReadmeImages/PostRequest.png?raw=true)
 
 
-<h4 align="left">Get Request Template</h4> 
+<h4 align="left">~~Get Request Template~~</h4> 
 <p align="left"> It doesn't require any input paramters </p>
 <p align="left"> Example:</p>
 
