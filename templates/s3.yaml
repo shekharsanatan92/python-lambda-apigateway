@@ -1,0 +1,14 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation Template To Create a s3 bucket to store images
+Resources:
+  MyS3Bucket:
+      Type: AWS::S3::Bucket
+      Properties:
+        BucketName: 'route-api-imagestore'
+
+Outputs:
+  MyS3Bucket:
+    Description: Information about the value
+    Value:  !Ref MyS3Bucket
+    Export:
+      Name: !Sub "${AWS::StackName}-MyS3Bucket"

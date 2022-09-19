@@ -1,0 +1,35 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation Template To Create a DynamoDB to store image details
+Parameters:
+  HashKeyElementName:
+    Type: String
+    Default: name
+    Description: Hash Key Name
+  HashKeyElementType:
+    Type: String
+    Default: S
+    Description: Hash Key Type
+Resources:
+  DynamoDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: Images
+      AttributeDefinitions:
+      - AttributeName:
+          Ref: HashKeyElementName
+        AttributeType:
+          Ref: HashKeyElementType
+      KeySchema:
+      - AttributeName:
+          Ref: HashKeyElementName
+        KeyType: HASH
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+Outputs:
+  DynamoDBTable:
+    Description: Information about the value
+    Value:  !GetAtt DynamoDBTable.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-Table-Image"

@@ -1,0 +1,325 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: AWS CloudFormation Template To Create a Lambda and RestApi resource along with Integrations
+Resources:
+  FunctionSet:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: s3ImageUpload
+      Handler: index.lambda_handler
+      Runtime: python3.7
+      Code:
+        ZipFile: |
+          import boto3
+          import datetime
+          import requests
+
+
+          def lambda_handler(event, context):
+
+              url = event['url']
+              key = event['name']
+              bucket_name = 'route-api-imagestore'
+              
+              r = requests.get(url, stream=True)
+              
+              session = boto3.Session()
+              s3 = session.resource('s3')
+              bucket = s3.Bucket(bucket_name)
+              bucket.upload_fileobj(r.raw, key)
+              s3path = bucket_name + '/' + key
+
+              client = boto3.resource('dynamodb')
+              table = client.Table('Images')
+            
+              response = table.put_item(
+              
+                Item={
+              
+                    'name': event['name'],
+              
+                    'url': event['url'],
+              
+                    's3path': s3path,
+              
+                    'uploadTimestamp': str(datetime.datetime.now())
+              
+                }
+              
+              )
+              
+              return {
+              
+                'statusCode': response['ResponseMetadata']['HTTPStatusCode'],
+              
+                'body': 'Record ' + event['name'] + ' added'
+              
+              }
+
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Timeout: '300'
+    DependsOn:
+    - LambdaExecutionRole
+
+  FunctionGet:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: s3ImageDetails
+      Handler: index.lambda_handler
+      Runtime: python3.7
+      Code:
+        ZipFile: |
+          import boto3
+          import json
+
+          def lambda_handler(event, context):
+              client = boto3.resource('dynamodb')
+              table = client.Table('Images')
+              response = table.scan()
+              data = response['Items']             
+              if response['Items'] != []:
+                  return response['Items']
+              else:
+                  return {
+                      'statusCode': '404',
+                      'body': 'No images found'
+                  }
+      Role:
+        Fn::GetAtt:
+        - LambdaExecutionRole
+        - Arn
+      Timeout: '300'
+    DependsOn:
+    - LambdaExecutionRole
+
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      Policies:
+      - PolicyName: LambdaPolicy
+        PolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+          - Action:
+              - 's3:*'
+            Resource: '*'
+            Effect: Allow          
+          - Action:
+            - logs:CreateLogGroup
+            - logs:CreateLogStream
+            - logs:PutLogEvents
+            Resource:
+            - arn:aws:logs:*:*:*
+            Effect: Allow
+          - Action:
+            - dynamodb:PutItem
+            - dynamodb:GetItem
+            - dynamodb:Scan
+            Resource: !ImportValue 'dynamodb-Table-Image'
+            Effect: Allow
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+        - Action:
+          - sts:AssumeRole
+          Effect: Allow
+          Principal:
+            Service:
+            - lambda.amazonaws.com
+
+  FunctionGetLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:invokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - FunctionGet
+        - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+        - ''
+        - - 'arn:aws:execute-api:'
+          - Ref: AWS::Region
+          - ":"
+          - Ref: AWS::AccountId
+          - ":"
+          - Ref: RestApi
+          - "/*"
+
+  FunctionsetLambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:invokeFunction
+      FunctionName:
+        Fn::GetAtt:
+        - FunctionSet
+        - Arn
+      Principal: apigateway.amazonaws.com
+      SourceArn:
+        Fn::Join:
+        - ''
+        - - 'arn:aws:execute-api:'
+          - Ref: AWS::Region
+          - ":"
+          - Ref: AWS::AccountId
+          - ":"
+          - Ref: RestApi
+          - "/*"
+
+
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: Image API
+      Description: This API supports the download and retrieval of s3 image Object
+      FailOnWarnings: true
+      EndpointConfiguration:
+        Types:
+          - REGIONAL
+      Body:
+        openapi: 3.0.0
+        info:
+          title: Image API
+          description: This API supports the download and retrieval of s3 image Object.
+          contact:
+            email: shekharsanatan92@gmail.com
+          license:
+            name: Apache 2.0
+            url: http://www.apache.org/licenses/LICENSE-2.0.html
+          version: 1.0.0
+        tags:
+        - name: admins
+          description: Secured Admin-only calls
+        - name: developers
+          description: Operations available to regular developers
+        paths:
+          "/imageInfo":
+            get:
+              tags:
+              - developers
+              summary: Get all s3 image details
+              description: Returns details of all images stored in s3
+              operationId: GetImages
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Join:
+                  - ''
+                  - - 'arn:aws:apigateway:'
+                    - Ref: AWS::Region
+                    - ":lambda:path/2015-03-31/functions/"
+                    - Fn::GetAtt:
+                      - FunctionGet
+                      - Arn
+                    - "/invocations"
+                responses:
+                  default:
+                    statusCode: '200'
+                httpMethod: POST
+                type: aws
+              responses:
+                '200':
+                  description: Returned details of all images stored in s3
+                  content:
+                    application/json:
+                      schema:
+                        "$ref": "#/components/schemas/imageInfo"
+                '400':
+                  description: Images not found
+                '404':
+                  description: Images not found
+            post:
+              tags:
+              - developers
+              summary: Pushes an Image with form data
+              description: Pushes an Image object to the s3
+              operationId: PushImage
+              requestBody:
+                description: Image to add
+                content:
+                  application/json:
+                    schema:
+                      "$ref": "#/components/schemas/imageSetInfo"
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Join:
+                  - ''
+                  - - 'arn:aws:apigateway:'
+                    - Ref: AWS::Region
+                    - ":lambda:path/2015-03-31/functions/"
+                    - Fn::GetAtt:
+                      - FunctionSet
+                      - Arn
+                    - "/invocations"
+                responses:
+                  default:
+                    statusCode: '200'
+                httpMethod: POST
+                type: aws
+              responses:
+                '200':
+                  description: Image object created
+                  content:
+                    application/json:
+                      schema:
+                        "$ref": "#/components/schemas/imageSetInfo"
+                '400':
+                  description: invalid input, object invalid
+                '409':
+                  description: An existing Image already exists
+        components:
+          schemas:
+            imageSetInfo:
+              required:
+              - name
+              - url
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: flower
+                url:
+                  type: string
+                  example: https://cdn.pixabay.com/photo/2014/02/27/16/10/flowers-276014__480.jpg
+            imageInfo:
+              required:
+              - name
+              - s3path
+              - timestamp
+              - url
+              type: object
+              additionalProperties: true
+              properties:
+                name:
+                  type: string
+                  example: flower
+                s3path:
+                  type: string
+                  example: bucket/key
+                timestamp:
+                  type: string
+                  example: '2022-09-18 16:07:07.422273'
+                url:
+                  type: string
+                  example: https://cdn.pixabay.com/photo/2014/02/27/16/10/flowers-276014__480.jpg
+ 
+
+Outputs:
+  RootUrl:
+    Description: Root URL of the API gateway
+    Value:
+      Fn::Join:
+      - ''
+      - - https://
+        - Ref: RestApi
+        - ".execute-api."
+        - Ref: AWS::Region
+        - ".amazonaws.com"
+        - "/image/imageInfo"
+  RestApi:
+    Description: Information about the value
+    Value:  !Ref RestApi
+    Export:
+      Name: !Sub "${AWS::StackName}"
